@@ -7,33 +7,28 @@ package location;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- *
+ * Class representing the response from a geolocation API.
+ * It includes fields for various geolocation details.
+ * 
  * @author phang
  */
 public class GeoLocationResponse {
+
     @JsonProperty("ip_address")
     private String ipAddress;
+
     private String city;
-    @JsonProperty("city_geoname_id")
     private int cityGeonameId;
     private String region;
-    @JsonProperty("region_iso_code")
     private String regionIsoCode;
-    @JsonProperty("region_geoname_id")
     private int regionGeonameId;
-    @JsonProperty("postal_code")
     private String postalCode;
     private String country;
-    @JsonProperty("country_code")
     private String countryCode;
-    @JsonProperty("country_geoname_id")
     private int countryGeonameId;
-    @JsonProperty("country_is_eu")
     private boolean countryIsEu;
     private String continent;
-    @JsonProperty("continent_code")
     private String continentCode;
-    @JsonProperty("continent_geoname_id")
     private int continentGeonameId;
     private double longitude;
     private double latitude;
@@ -43,7 +38,7 @@ public class GeoLocationResponse {
     private Currency currency;
     private Connect connection;
 
-
+    // Getters and setters
     public String getIpAddress() {
         return ipAddress;
     }
@@ -200,7 +195,7 @@ public class GeoLocationResponse {
         return currency;
     }
 
-    public void setCurrency(Currency currencY) {
+    public void setCurrency(Currency currency) {
         this.currency = currency;
     }
 
@@ -208,7 +203,7 @@ public class GeoLocationResponse {
         return connection;
     }
 
-    public void setConnection(Connect connect) {
+    public void setConnection(Connect connection) {
         this.connection = connection;
     }
 }

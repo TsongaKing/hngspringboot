@@ -9,8 +9,8 @@ package weather;
  * @author phang
  */
 public class WeatherResponse {
-    
-   private Location location;
+
+    private Location location;
     private Current current;
 
     public Location getLocation() {

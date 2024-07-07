@@ -10,72 +10,80 @@ import model.ApiResponseModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import service.ApiService;
 import weather.WeatherResponse;
 
-/**
- *
- * @author phang
- */
 @RestController
-@RequestMapping("/api")
 public class ApiEndpoint {
-    
-   
+
     @Autowired
-   private ApiService apiService;
-    
-    
-    @GetMapping("/greet")
+    private ApiService apiService;
+
+    @GetMapping("/api/greet")
     public String hello() {
-        return "hello word!";
+        return "Hello, World!";
     }
-    
-    //re run the app
-    
-    //this is the endpoint that will be expose as the solution
-    @GetMapping("/hello")
-    public ApiResponseModel helloEndpoint(@RequestParam String visitor_name, @RequestHeader(value = "X-Forwarded-For", required=false) String xForwardedFor, HttpServletRequest request) {
-        //this is responsible for the getting the ipaddress of the client's browser
+
+    @GetMapping("/api/hello")
+    public ApiResponseModel helloEndpoint(@RequestParam String visitor_name,
+                                          @RequestHeader(value = "X-Forwarded-For", required = false) String xForwardedFor,
+                                          HttpServletRequest request) {
+        // Get the IP address of the client using the utility method
+        String ipAddress = getClientIp(request, xForwardedFor);
+
+        // Get the geolocation information based on the IP address
+        GeoLocationResponse geoLocationResponse = apiService.getGeoLocation(ipAddress);
+
+        // Handle case where geoLocationResponse is null (error case)
+        if (geoLocationResponse == null) {
+            // Handle appropriately (throw exception, return error response, etc.)
+            return new ApiResponseModel(ipAddress, "Unknown", "Error fetching geolocation data");
+        }
+
+        // Extract latitude and longitude from the geolocation response
+        double lat = geoLocationResponse.getLatitude();
+        double lon = geoLocationResponse.getLongitude();
+
+        // Get the weather information based on the latitude and longitude
+        WeatherResponse weatherResponse = apiService.getWeatherUpdate(lat, lon);
+
+        // Handle case where weatherResponse is null (error case)
+        if (weatherResponse == null) {
+            // Handle appropriately (throw exception, return error response, etc.)
+            return new ApiResponseModel(ipAddress, "Unknown", "Error fetching weather data");
+        }
+
+        // Extract city and temperature information from the weather response
+        String city = weatherResponse.getLocation().getName();
+        double temp = weatherResponse.getCurrent().getTemp_c();
+
+        // Cleanse the visitor name from leading and trailing double quotes if present
+        if (visitor_name.startsWith("\"") || visitor_name.endsWith("\"")) {
+            visitor_name = visitor_name.replaceAll("^\"|\"$", "");
+        }
+
+        // Create the greeting message
+        String greeting = "Hello, " + visitor_name + "!, the temperature is " + temp + " degrees Celsius in " + city;
+        System.out.println(greeting);
+
+        // Return the JSON response
+        return new ApiResponseModel(ipAddress, city, greeting);
+    }
+
+    // Utility method to get client IP address and convert IPv6 loopback to IPv4
+    private String getClientIp(HttpServletRequest request, String xForwardedFor) {
         String ipAddress = "";
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
             ipAddress = xForwardedFor.split(",")[0];
         } else {
-            ipAddress = request.getRemoteAddr();//this is used in the local host
+            ipAddress = request.getRemoteAddr();
         }
-        
-        
-        GeoLocationResponse geoLocationResponse = apiService.getGeoLocation(ipAddress);
-        //to get the latittude and longitude
-        
-        double lat = geoLocationResponse.getLatitude();
-        double lon = geoLocationResponse.getLongitude();
-        
-        //these will be used as parameters in the weather api call
-        
-        WeatherResponse weatherResponse = apiService.getWeatherUpdate(lat, lon);
-        //get the city from the response above
-        //You got the models wrong. location is an entity on its own not a string
-        String city = weatherResponse.getLocation().getName();
-        
-        System.out.println(city);
-        //get the temperature
-        double temp = weatherResponse.getCurrent().getTemp_c();
-        
-        //in the json response provided, you'' not that it uses "Mark", We'll thus need to use some regex to cleanse the leading and trailing "
-        if(visitor_name.startsWith("\"") || visitor_name.endsWith("\"")) {
-            // Remove leading and trailing double quotes
-            visitor_name = visitor_name.replaceAll("^\"|\"$", "");
+        // Convert IPv6 loopback address to IPv4
+        if ("0:0:0:0:0:0:0:1".equals(ipAddress)) {
+            ipAddress = "127.0.0.1";
         }
-    
-        //edit the greeting
-        String greeting = "Hello,  " + visitor_name +"!, the temperature is " + Double.toString(temp) + " degress Celsius " + city;
-        System.out.println(greeting);
-        //return the json now
-        //rerun the app
-        return new ApiResponseModel(ipAddress, city, greeting);
-}
+        return ipAddress;
+    }
 }
