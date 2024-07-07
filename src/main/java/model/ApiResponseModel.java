@@ -10,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  *
  * @author phang
  */
-@JsonPropertyOrder({ "clientIp", "location", "greeting" })
+@JsonPropertyOrder({ "client_Ip", "location", "greeting" })
 public class ApiResponseModel {
     private String client_ip;
     private String location;
